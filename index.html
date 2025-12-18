@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mein Finanzplaner</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f7;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        h1 {
+            color: #007aff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .balance {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .balance-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .positive {
+            color: #34c759;
+        }
+        .negative {
+            color: #ff3b30;
+        }
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0062cc;
+        }
+        .transaction-list {
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .transaction-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+        .transaction-income {
+            color: #34c759;
+        }
+        .transaction-expense {
+            color: #ff3b30;
+        }
+        .transaction-description {
+            font-weight: 500;
+        }
+        .transaction-category {
+            font-size: 14px;
+            color: #666;
+        }
+        .transaction-amount {
+            font-weight: bold;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: #e5e5ea;
+            cursor: pointer;
+        }
+        .tab:first-child {
+            border-radius: 8px 0 0 8px;
+        }
+        .tab:last-child {
+            border-radius: 0 8px 8px 0;
+        }
+        .tab.active {
+            background: #007aff;
+            color: white;
+        }
+        @media (max-width: 400px) {
+            .container {
+                padding: 10px;
+            }
+            .balance-amount {
+                font-size: 28px;
+            }
+        }
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #18191a;
+                color: #e4e6eb;
+            }
+            .balance,
+            .form-container,
+            .transaction-list,
+            .overview {
+                background: #242526;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            }
+            .overview > div {
+                background: transparent;
+            }
+            .balance-amount {
+                color: #e4e6eb;
+            }
+            .positive {
+                color: #34c759;
+            }
+            .negative {
+                color: #ff3b30;
+            }
+            .tab {
+                background: #3a3b3c;
+                color: #e4e6eb;
+            }
+            .tab.active {
+                background: #007aff;
+                color: #fff;
+            }
+            input, select {
+                background: #18191a;
+                color: #e4e6eb;
+                border: 1px solid #444;
+            }
+            button {
+                background-color: #007aff;
+                color: #fff;
+            }
+            button:hover {
+                background-color: #005bb5;
+            }
+            .transaction-income {
+                color: #34c759;
+            }
+            .transaction-expense {
+                color: #ff3b30;
+            }
+            .transaction-category {
+                color: #b0b3b8;
+            }
+            select#monthSelect {
+                background: #23272f;
+                color: #34c759;
+                border: 1.5px solid #34c759;
+            }
+            label[for="monthSelect"] {
+                color: #34c759;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <div id="loginModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:2000; display:flex; align-items:center; justify-content:center;">
+        <div style="background:#262729; color:white; border-radius:12px; padding:32px; min-width:260px; box-shadow:0 2px 20px rgba(0,0,0,0.2); text-align:center;">
+            <h2>Willkommen!</h2>
+            <form id="loginForm">
+                <label for="username">Bitte geben Sie Ihren Namen ein:</label>
+                <input type="text" id="username" style="margin:12px 0; width:90%; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                <button type="submit" style="background:#007aff; color:white; border:none; border-radius:8px; padding:10px 20px; font-size:16px; cursor:pointer;">Login</button>
+            </form>
+        </div>
+    </div>
+    <div class="container" style="display:none;" id="mainContainer">
+        <h1 id="greeting" style="background: linear-gradient(90deg, #34c759, #007aff, #ff3b30); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-fill-color: transparent;"></h1>
+        
+        <div style="display:flex; justify-content:center; margin-bottom:15px;">
+            <div style="
+                background: #23272f;
+                border-radius: 12px;
+                padding: 12px 24px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+                border: 1px solid #007aff;
+                min-width: 220px;
+            ">
+                <label for="monthSelect" style="
+                    font-weight: 600;
+                    margin-right: 8px;
+                    color: #007aff;
+                    font-size: 17px;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                ">
+                    <i class="fa-solid fa-calendar-days" style="font-size:18px;"></i>
+                    Monat:
+                </label>
+                <select id="monthSelect" onchange="onPeriodChange()" style="
+                    padding: 8px 18px 8px 12px;
+                    border-radius: 8px;
+                    border: 1.5px solid #007aff;
+                    font-size: 17px;
+                    background: #23272f;
+                    color: #007aff;
+                    font-weight: 600;
+                    outline: none;
+                    transition: border-color 0.2s;
+                    box-shadow: none;
+                ">
+                </select>
+            </div>
+        </div>
+        
+        <div class="balance">
+            <div>Aktueller Kontostand</div>
+            <div class="balance-amount positive" id="currentBalance">0.00 €</div>
+        </div>
+        
+        <div class="overview" style="background:#262729; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05); display:flex; justify-content:space-between; text-align:center;">
+            <div>
+                <div style="color:#34c759; font-weight:500;">Einnahmen</div>
+                <div id="totalIncome" style="font-size:20px; font-weight:bold; color:white;">0.00 €</div>
+            </div>
+            <div>
+                <div style="color:#ff3b30; font-weight:500;">Ausgaben</div>
+                <div id="totalExpense" style="font-size:20px; font-weight:bold; color:white;">0.00 €</div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" id="incomeTab" onclick="switchTab('income')">Einnahme</div>
+            <div class="tab" id="expenseTab" onclick="switchTab('expense')">Ausgabe</div>
+        </div>
+        
+        <div class="form-container" id="incomeForm">
+            <div class="form-group">
+                <label for="incomeDescription">Beschreibung</label>
+                <input type="text" id="incomeDescription" placeholder="Gehalt, Geschenk, etc.">
+            </div>
+            <div class="form-group">
+                <label for="incomeAmount">Betrag (€)</label>
+                <input type="number" id="incomeAmount" placeholder="0.00" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="incomeCategory">Kategorie</label>
+                <select id="incomeCategory">
+                    <option value="Gehalt">Gehalt</option>
+                    <option value="Geschenk">Geschenk</option>
+                    <option value="Investition">Investition</option>
+                    <option value="Sonstiges">Sonstiges</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="incomeDate">Datum</label>
+                <input type="date" id="incomeDate">
+            </div>
+            <button onclick="addTransaction('income')">Einnahme hinzufügen</button>
+        </div>
+        
+        <div class="form-container" id="expenseForm" style="display: none;">
+            <div class="form-group">
+                <label for="expenseDescription">Beschreibung</label>
+                <input type="text" id="expenseDescription" placeholder="Lebensmittel, Miete, etc.">
+            </div>
+            <div class="form-group">
+                <label for="expenseAmount">Betrag (€)</label>
+                <input type="number" id="expenseAmount" placeholder="0.00" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="expenseCategory">Kategorie</label>
+                <select id="expenseCategory">
+                    <option value="Lebensmittel">Lebensmittel</option>
+                    <option value="Miete">Miete</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Unterhaltung">Unterhaltung</option>
+                    <option value="Rechnungen">Rechnungen</option>
+                    <option value="Sonstiges">Sonstiges</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="expenseDate">Datum</label>
+                <input type="date" id="expenseDate">
+            </div>
+            <button onclick="addTransaction('expense')">Ausgabe hinzufügen</button>
+        </div>
+        
+        <h2>Letzte Transaktionen</h2>
+        <div class="transaction-list" id="transactionList">
+        </div>
+        <div style="display:flex; gap:10px; margin:18px 0;">
+            <button id="exportBtn" style="background:#34c759; color:white; width:auto;">Exportieren</button>
+            <input type="file" id="importFile" accept=".json" style="display:none;">
+            <button id="importBtn" style="background:#007aff; color:white; width:auto;">Importieren</button>
+        </div>
+    </div>
+    <div id="editModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+        <div style="background:#262729; color:white; border-radius:12px; padding:24px; min-width:280px; max-width:90vw; box-shadow:0 2px 20px rgba(0,0,0,0.2); position:relative;">
+            <h3>Transaktion bearbeiten</h3>
+            <form id="editForm">
+                <div class="form-group">
+                    <label for="editDescription">Beschreibung</label>
+                    <input type="text" id="editDescription">
+                </div>
+                <div class="form-group">
+                    <label for="editAmount">Betrag (€)</label>
+                    <input type="number" id="editAmount" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="editCategory">Kategorie</label>
+                    <input type="text" id="editCategory">
+                </div>
+                <div class="form-group">
+                    <label for="editDate">Datum</label>
+                    <input type="date" id="editDate">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button type="submit" style="background:#34c759; color:white;">Speichern</button>
+                    <button type="button" onclick="closeEditModal()" style="background:#eee; color:#333;">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        let balance = 0;
+        let transactions = [];
+        let selectedMonth, selectedYear;
+
+        function initPeriodSelect() {
+            const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+            const now = new Date();
+            selectedMonth = now.getMonth();
+            selectedYear = now.getFullYear();
+
+            const monthSelect = document.getElementById('monthSelect');
+            monthSelect.innerHTML = monthNames.map((m, i) => `<option value="${i}"${i===selectedMonth?' selected':''}>${m}</option>`).join('');
+        }
+
+        function onPeriodChange() {
+            selectedMonth = parseInt(document.getElementById('monthSelect').value);
+            selectedYear = new Date().getFullYear();
+            updateBalance();
+            updateTransactionList();
+        }
+
+        function switchTab(type) {
+            if (type === 'income') {
+                document.getElementById('incomeTab').classList.add('active');
+                document.getElementById('expenseTab').classList.remove('active');
+                document.getElementById('incomeForm').style.display = 'block';
+                document.getElementById('expenseForm').style.display = 'none';
+            } else {
+                document.getElementById('incomeTab').classList.remove('active');
+                document.getElementById('expenseTab').classList.add('active');
+                document.getElementById('incomeForm').style.display = 'none';
+                document.getElementById('expenseForm').style.display = 'block';
+            }
+        }
+        
+        function loadData() {
+            const storedTransactions = localStorage.getItem('finanzplaner_transactions');
+            const storedBalance = localStorage.getItem('finanzplaner_balance');
+            transactions = storedTransactions ? JSON.parse(storedTransactions) : [];
+            balance = storedBalance ? parseFloat(storedBalance) : 0;
+        }
+
+        function saveData() {
+            localStorage.setItem('finanzplaner_transactions', JSON.stringify(transactions));
+            localStorage.setItem('finanzplaner_balance', balance.toString());
+        }
+
+        function addTransaction(type) {
+            let description, amount, category, dateStr;
+            
+            if (type === 'income') {
+                description = document.getElementById('incomeDescription').value;
+                amount = parseFloat(document.getElementById('incomeAmount').value);
+                category = document.getElementById('incomeCategory').value;
+                dateStr = document.getElementById('incomeDate').value;
+            } else {
+                description = document.getElementById('expenseDescription').value;
+                amount = parseFloat(document.getElementById('expenseAmount').value);
+                category = document.getElementById('expenseCategory').value;
+                dateStr = document.getElementById('expenseDate').value;
+            }
+            
+            if (!description || isNaN(amount) || amount <= 0) {
+                alert('Bitte geben Sie eine gültige Beschreibung und einen positiven Betrag ein.');
+                return;
+            }
+            if (!dateStr) {
+                alert('Bitte wählen Sie ein Datum aus.');
+                return;
+            }
+            const dateObj = new Date(dateStr);
+            const date = dateObj.toLocaleDateString('de-DE');
+
+            const transaction = {
+                id: Date.now(),
+                type: type,
+                description: description,
+                amount: amount,
+                category: category,
+                date: date
+            };
+            
+            transactions.unshift(transaction);
+
+            if (type === 'income') {
+                balance += amount;
+            } else {
+                balance -= amount;
+            }
+
+            saveData();
+            updateBalance();
+            updateTransactionList();
+            clearForm(type);
+        }
+        
+        function updateBalance() {
+            const balanceElement = document.getElementById('currentBalance');
+            balanceElement.textContent = balance.toFixed(2) + ' €';
+            
+            if (balance >= 0) {
+                balanceElement.className = 'balance-amount positive';
+            } else {
+                balanceElement.className = 'balance-amount negative';
+            }
+        }
+        
+        function updateTransactionList() {
+            const listElement = document.getElementById('transactionList');
+            listElement.innerHTML = '';
+
+            let filteredTransactions = transactions.filter(t => {
+                const d = t.date.split('.');
+                const month = parseInt(d[1],10)-1;
+                const year = parseInt(d[2],10);
+                return month === selectedMonth && year === selectedYear;
+            });
+
+            filteredTransactions = filteredTransactions.sort((a, b) => {
+                const aDate = a.date.split('.').reverse().join('-');
+                const bDate = b.date.split('.').reverse().join('-');
+                return bDate.localeCompare(aDate);
+            });
+
+            filteredTransactions.forEach(transaction => {
+                const item = document.createElement('div');
+                item.className = 'transaction-item';
+
+                const leftDiv = document.createElement('div');
+                leftDiv.innerHTML = `
+                    <div class="transaction-description">${transaction.description}</div>
+                    <div class="transaction-category">${transaction.category} • ${transaction.date}</div>
+                `;
+
+                const rightDiv = document.createElement('div');
+                rightDiv.className = `transaction-amount ${transaction.type === 'income' ? 'transaction-income' : 'transaction-expense'}`;
+                rightDiv.textContent = `${transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)} €`;
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.style.display = 'flex';
+                actionsDiv.style.gap = '6px';
+
+                const editBtn = document.createElement('button');
+                editBtn.innerHTML = '<i class="fa-solid fa-pen-to-square" style="color:#f39c12"></i>';
+                editBtn.title = 'Bearbeiten';
+                editBtn.style.background = 'transparent';
+                editBtn.style.color = 'inherit';
+                editBtn.style.border = 'none';
+                editBtn.style.borderRadius = '6px';
+                editBtn.style.padding = '6px 10px';
+                editBtn.style.cursor = 'pointer';
+                editBtn.onclick = () => editTransaction(transaction.id);
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '<i class="fa-solid fa-trash" style="color:#ff3b30"></i>';
+                deleteBtn.title = 'Löschen';
+                deleteBtn.style.background = 'transparent';
+                deleteBtn.style.color = 'inherit';
+                deleteBtn.style.border = 'none';
+                deleteBtn.style.borderRadius = '6px';
+                deleteBtn.style.padding = '6px 10px';
+                deleteBtn.style.cursor = 'pointer';
+                deleteBtn.onclick = () => deleteTransaction(transaction.id);
+
+                actionsDiv.appendChild(editBtn);
+                actionsDiv.appendChild(deleteBtn);
+
+                item.appendChild(leftDiv);
+                item.appendChild(rightDiv);
+                item.appendChild(actionsDiv);
+                listElement.appendChild(item);
+            });
+
+            updateOverview(filteredTransactions);
+        }
+
+        function updateOverview(filteredTransactions) {
+            filteredTransactions = filteredTransactions || transactions.filter(t => {
+                const d = t.date.split('.');
+                const month = parseInt(d[1],10)-1;
+                const year = parseInt(d[2],10);
+                return month === selectedMonth && year === selectedYear;
+            });
+            const totalIncome = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpense = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            document.getElementById('totalIncome').textContent = totalIncome.toFixed(2) + ' €';
+            document.getElementById('totalExpense').textContent = totalExpense.toFixed(2) + ' €';
+        }
+
+        function deleteTransaction(id) {
+            const idx = transactions.findIndex(t => t.id === id);
+            if (idx !== -1) {
+                const t = transactions[idx];
+                if (t.type === 'income') balance -= t.amount;
+                else balance += t.amount;
+                transactions.splice(idx, 1);
+                saveData();
+                updateBalance();
+                updateTransactionList();
+            }
+        }
+
+        let editTransactionId = null;
+
+        function editTransaction(id) {
+            const idx = transactions.findIndex(t => t.id === id);
+            if (idx === -1) return;
+            const t = transactions[idx];
+            editTransactionId = id;
+            document.getElementById('editDescription').value = t.description;
+            document.getElementById('editAmount').value = t.amount;
+            document.getElementById('editCategory').value = t.category;
+            const d = t.date.split('.');
+            document.getElementById('editDate').value = `${d[2]}-${d[1].padStart(2,'0')}-${d[0].padStart(2,'0')}`;
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            editTransactionId = null;
+        }
+
+        document.getElementById('editForm').onsubmit = function(e) {
+            e.preventDefault();
+            const idx = transactions.findIndex(t => t.id === editTransactionId);
+            if (idx === -1) return;
+            const t = transactions[idx];
+            const newDesc = document.getElementById('editDescription').value;
+            const newAmount = parseFloat(document.getElementById('editAmount').value);
+            const newCategory = document.getElementById('editCategory').value;
+            const newDateStr = document.getElementById('editDate').value;
+            if (!newDesc || isNaN(newAmount) || newAmount <= 0 || !newCategory || !newDateStr) {
+                alert('Bitte alle Felder korrekt ausfüllen.');
+                return;
+            }
+            if (t.type === 'income') balance -= t.amount;
+            else balance += t.amount;
+            t.description = newDesc;
+            t.amount = newAmount;
+            t.category = newCategory;
+            t.date = new Date(newDateStr).toLocaleDateString('de-DE');
+
+            if (t.type === 'income') balance += t.amount;
+            else balance -= t.amount;
+
+            saveData();
+            updateBalance();
+            updateTransactionList();
+            closeEditModal();
+        };
+
+        function clearForm(type) {
+            if (type === 'income') {
+                document.getElementById('incomeDescription').value = '';
+                document.getElementById('incomeAmount').value = '';
+                document.getElementById('incomeDate').value = '';
+            } else {
+                document.getElementById('expenseDescription').value = '';
+                document.getElementById('expenseAmount').value = '';
+                document.getElementById('expenseDate').value = '';
+            }
+        }
+        function showMain(name) {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('mainContainer').style.display = '';
+            document.getElementById('greeting').textContent = 'Hallo ' + name + '!';
+        }
+
+        function checkLogin() {
+            let name = localStorage.getItem('finanzplaner_name');
+            if (!name) {
+                document.getElementById('loginModal').style.display = 'flex';
+                document.getElementById('mainContainer').style.display = 'none';
+            } else {
+                showMain(name);
+            }
+        }
+
+        document.getElementById('loginForm').onsubmit = function(e) {
+            e.preventDefault();
+            const name = document.getElementById('username').value.trim();
+            if (!name) {
+                alert('Bitte geben Sie Ihren Namen ein.');
+                return;
+            }
+            localStorage.setItem('finanzplaner_name', name);
+            showMain(name);
+        };
+
+        checkLogin();
+        loadData();
+        initPeriodSelect();
+        updateBalance();
+        updateTransactionList();
+        document.getElementById('incomeDate').value = new Date().toISOString().slice(0,10);
+        document.getElementById('expenseDate').value = new Date().toISOString().slice(0,10);
+        
+        document.getElementById('exportBtn').onclick = function() {
+            const dataStr = JSON.stringify(transactions, null, 2);
+            const blob = new Blob([dataStr], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'finanzplaner_export.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+
+        document.getElementById('importBtn').onclick = function() {
+            document.getElementById('importFile').click();
+        };
+        document.getElementById('importFile').onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const imported = JSON.parse(evt.target.result);
+                    if (!Array.isArray(imported)) throw new Error();
+                    if (!imported.every(t => t.id && t.type && t.description && t.amount && t.category && t.date)) {
+                        alert('Ungültiges Format!');
+                        return;
+                    }
+                    transactions = imported;
+                    balance = transactions.reduce((sum, t) => t.type === 'income' ? sum + t.amount : sum - t.amount, 0);
+                    saveData();
+                    updateBalance();
+                    updateTransactionList();
+                    alert('Import erfolgreich!');
+                } catch {
+                    alert('Fehler beim Import. Bitte gültige Datei wählen.');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        };
+    </script>
+</body>
+</html>
